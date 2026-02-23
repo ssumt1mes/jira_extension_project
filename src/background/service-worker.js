@@ -50,6 +50,56 @@ function storageLocalSet(value) {
   });
 }
 
+function normalizeAlertItem(item) {
+  if (!item || typeof item !== "object" || !item.id) {
+    return null;
+  }
+  return {
+    id: item.id,
+    key: item.key || "",
+    summary: item.summary || "",
+    status: item.status || "",
+    updated: item.updated || "",
+    updatedLabel: item.updatedLabel || "",
+    link: item.link || "",
+    createdAt: item.createdAt || Date.now(),
+    isRead: Boolean(item.isRead)
+  };
+}
+
+function normalizeInbox(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+  return items
+    .map(normalizeAlertItem)
+    .filter(Boolean)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .slice(0, 120);
+}
+
+function buildInboxPayload(items) {
+  const normalized = normalizeInbox(items);
+  const unreadCount = normalized.filter((item) => !item.isRead).length;
+  return {
+    items: normalized.slice(0, 40),
+    unreadCount
+  };
+}
+
+async function getAlertInbox() {
+  const raw = (await storageLocalGet(ALERT_INBOX_KEY)) || [];
+  return normalizeInbox(raw);
+}
+
+async function setAlertInbox(items) {
+  const normalized = normalizeInbox(items);
+  await storageLocalSet({
+    [ALERT_INBOX_KEY]: normalized
+  });
+  return normalized;
+}
+
 async function getSettings() {
   const stored = await storageSyncGet(STORAGE_KEY);
   const merged = { ...DEFAULT_SETTINGS, ...(stored || {}) };
@@ -91,7 +141,7 @@ async function fetchRecentIssues(settings) {
     }
   });
   if (!response.ok) {
-    throw new Error(`Search failed (${response.status})`);
+    throw new Error(`알림 조회 실패 (${response.status})`);
   }
   const json = await response.json();
   return Array.isArray(json?.issues) ? json.issues : [];
@@ -109,14 +159,46 @@ function formatUpdatedAt(isoText) {
   return dt.toLocaleString();
 }
 
+async function broadcastNewAlerts(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return;
+  }
+
+  const tabs = await new Promise((resolve) => {
+    chrome.tabs.query({}, (result) => {
+      resolve(Array.isArray(result) ? result : []);
+    });
+  });
+  await Promise.all(
+    tabs
+      .filter((tab) => tab.id && typeof tab.url === "string")
+      .filter((tab) => {
+        const url = tab.url || "";
+        return (
+          url.includes("atlassian.net") ||
+          url.includes("http://localhost/") ||
+          url.includes("http://127.0.0.1/")
+        );
+      })
+      .map(
+        (tab) =>
+          new Promise((resolve) => {
+            chrome.tabs.sendMessage(tab.id, { type: "jrsv:newAlerts", items }, () => {
+              resolve();
+            });
+          })
+      )
+  );
+}
+
 async function pollAndNotify() {
   const settings = await getSettings();
   if (!settings.alertEnabled || !settings.jiraBaseUrl) {
-    return { newCount: 0 };
+    return { newCount: 0, newItems: [] };
   }
 
   let seen = (await storageLocalGet(ALERT_SEEN_KEY)) || {};
-  const inbox = (await storageLocalGet(ALERT_INBOX_KEY)) || [];
+  const inbox = await getAlertInbox();
   const recentIssues = await fetchRecentIssues(settings);
 
   const newItems = [];
@@ -146,22 +228,31 @@ async function pollAndNotify() {
       updated,
       updatedLabel,
       link,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      isRead: false
     });
 
     chrome.notifications.create(sanitizeNotificationId(`jrsv:${marker}`), {
       type: "basic",
       iconUrl: "icons/icon128.png",
-      title: `Jira update: ${key}`,
+      title: `Jira 변경 알림: ${key}`,
       message: `${statusName ? `[${statusName}] ` : ""}${summary}`.slice(0, 240)
     });
   }
 
   if (newItems.length > 0) {
-    const mergedInbox = [...newItems, ...inbox].slice(0, 80);
-    await storageLocalSet({
-      [ALERT_INBOX_KEY]: mergedInbox
-    });
+    const mergedById = new Map();
+    for (const item of newItems) {
+      mergedById.set(item.id, item);
+    }
+    for (const item of inbox) {
+      if (!mergedById.has(item.id)) {
+        mergedById.set(item.id, item);
+      }
+    }
+    const mergedInbox = [...mergedById.values()];
+    await setAlertInbox(mergedInbox);
+    await broadcastNewAlerts(newItems);
   }
 
   // Keep seen markers bounded.
@@ -173,7 +264,7 @@ async function pollAndNotify() {
     [ALERT_SEEN_KEY]: seen
   });
 
-  return { newCount: newItems.length };
+  return { newCount: newItems.length, newItems };
 }
 
 async function scheduleAlarm() {
@@ -220,10 +311,14 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   }
   const marker = notificationId.slice(5);
   void (async () => {
-    const inbox = (await storageLocalGet(ALERT_INBOX_KEY)) || [];
+    const inbox = await getAlertInbox();
     const item = inbox.find(
       (entry) => sanitizeNotificationId(`jrsv:${entry.id}`) === notificationId || entry.id === marker
     );
+    if (item) {
+      const updated = inbox.map((entry) => (entry.id === item.id ? { ...entry, isRead: true } : entry));
+      await setAlertInbox(updated);
+    }
     if (item?.link) {
       chrome.tabs.create({ url: item.link });
     }
@@ -237,8 +332,73 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "jrsv:getAlertInbox") {
     void (async () => {
-      const inbox = (await storageLocalGet(ALERT_INBOX_KEY)) || [];
-      sendResponse({ items: inbox.slice(0, 20) });
+      const inbox = await getAlertInbox();
+      sendResponse(buildInboxPayload(inbox));
+    })();
+    return true;
+  }
+
+  if (message.type === "jrsv:markAlertRead") {
+    void (async () => {
+      const inbox = await getAlertInbox();
+      const targetId = String(message.id || "");
+      const nextRead = message.isRead !== false;
+      const updated = inbox.map((item) =>
+        item.id === targetId
+          ? {
+              ...item,
+              isRead: nextRead
+            }
+          : item
+      );
+      const saved = await setAlertInbox(updated);
+      sendResponse({
+        ok: true,
+        ...buildInboxPayload(saved)
+      });
+    })();
+    return true;
+  }
+
+  if (message.type === "jrsv:markAllAlertsRead") {
+    void (async () => {
+      const inbox = await getAlertInbox();
+      const updated = inbox.map((item) => ({
+        ...item,
+        isRead: true
+      }));
+      const saved = await setAlertInbox(updated);
+      sendResponse({
+        ok: true,
+        ...buildInboxPayload(saved)
+      });
+    })();
+    return true;
+  }
+
+  if (message.type === "jrsv:deleteAlert") {
+    void (async () => {
+      const inbox = await getAlertInbox();
+      const targetId = String(message.id || "");
+      const updated = inbox.filter((item) => item.id !== targetId);
+      const saved = await setAlertInbox(updated);
+      sendResponse({
+        ok: true,
+        ...buildInboxPayload(saved)
+      });
+    })();
+    return true;
+  }
+
+  if (message.type === "jrsv:deleteReadAlerts") {
+    void (async () => {
+      const inbox = await getAlertInbox();
+      const updated = inbox.filter((item) => !item.isRead);
+      const saved = await setAlertInbox(updated);
+      sendResponse({
+        ok: true,
+        ...buildInboxPayload(saved)
+      });
     })();
     return true;
   }
@@ -251,7 +411,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       } catch (error) {
         sendResponse({
           ok: false,
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: error instanceof Error ? error.message : "원인을 알 수 없는 오류"
         });
       }
     })();

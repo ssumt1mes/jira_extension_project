@@ -99,8 +99,8 @@ test("shows related issues grouped by product and step", async () => {
     await expect(panel).toContainText("COMMONR-380");
     await expect(panel).toContainText("Search (2)");
     await expect(panel).toContainText("Payments (1)");
-    await expect(panel).toContainText("Step 1 - login");
-    await expect(panel).toContainText("Step 2 - checkout");
+    await expect(panel).toContainText("단계 1 - login");
+    await expect(panel).toContainText("단계 2 - checkout");
     await expect(panel).toContainText("REL-101");
     await expect(panel).toContainText("REL-102");
     await expect(panel).toContainText("REL-103");

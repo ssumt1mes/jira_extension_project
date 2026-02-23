@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Jira Related Step Viewer Options</title>
+    <title>AES Jira Bot 옵션</title>
     <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
     <main class="wrap">
-      <h1>Jira Related Step Viewer</h1>
+      <h1>AES Jira Bot</h1>
       <p class="desc">
-        Labels are used to map related issues into product and step sections.
+        Jira 이슈 분석, 알림, 로컬 브릿지(OpenCode) 연결을 설정할 수 있습니다.
       </p>
 
       <form id="settings-form">
@@ -44,6 +44,33 @@
           <label class="field">
             <span>Lookback window (minutes)</span>
             <input id="alertLookbackMin" type="number" min="3" max="180" />
+          </label>
+        </section>
+
+        <section class="preset-box">
+          <h2>Local Bridge (OpenCode / LLM)</h2>
+          <p>
+            If enabled, every message sent from AES Jira Bot input is forwarded to your local bridge server.
+          </p>
+
+          <label class="field row-field">
+            <input id="localBridgeEnabled" type="checkbox" />
+            <span>Enable local bridge forwarding</span>
+          </label>
+
+          <label class="field">
+            <span>Bridge URL</span>
+            <input
+              id="localBridgeUrl"
+              type="text"
+              autocomplete="off"
+              placeholder="http://localhost:4096/api/chat"
+            />
+          </label>
+
+          <label class="field">
+            <span>Bridge timeout (ms)</span>
+            <input id="localBridgeTimeoutMs" type="number" min="500" max="20000" />
           </label>
         </section>
 

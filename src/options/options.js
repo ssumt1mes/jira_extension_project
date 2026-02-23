@@ -4,6 +4,9 @@ const DEFAULT_SETTINGS = Object.freeze({
   alertEnabled: true,
   alertIntervalMin: 3,
   alertLookbackMin: 10,
+  localBridgeEnabled: false,
+  localBridgeUrl: "http://localhost:4096/api/chat",
+  localBridgeTimeoutMs: 8000,
   productLabelPrefix: "product:",
   stepLabelPrefix: "step:",
   stepRegex: "(?:^|\\s)step[:\\-_ ]?(\\d+)",
@@ -17,6 +20,9 @@ const SCRUM_PRESET_SETTINGS = Object.freeze({
   alertEnabled: true,
   alertIntervalMin: 3,
   alertLookbackMin: 10,
+  localBridgeEnabled: true,
+  localBridgeUrl: "http://localhost:4096/api/chat",
+  localBridgeTimeoutMs: 8000,
   productLabelPrefix: "product:",
   stepLabelPrefix: "step:",
   stepRegex: "(?:^|\\s)step[:\\-_ ]?(\\d+)",
@@ -66,6 +72,11 @@ async function restore() {
   byId("alertEnabled").checked = Boolean(merged.alertEnabled);
   byId("alertIntervalMin").value = String(merged.alertIntervalMin || DEFAULT_SETTINGS.alertIntervalMin);
   byId("alertLookbackMin").value = String(merged.alertLookbackMin || DEFAULT_SETTINGS.alertLookbackMin);
+  byId("localBridgeEnabled").checked = Boolean(merged.localBridgeEnabled);
+  byId("localBridgeUrl").value = merged.localBridgeUrl || DEFAULT_SETTINGS.localBridgeUrl;
+  byId("localBridgeTimeoutMs").value = String(
+    merged.localBridgeTimeoutMs || DEFAULT_SETTINGS.localBridgeTimeoutMs
+  );
   byId("productLabelPrefix").value = merged.productLabelPrefix;
   byId("stepLabelPrefix").value = merged.stepLabelPrefix;
   byId("stepRegex").value = merged.stepRegex;
@@ -86,6 +97,10 @@ async function onSave(event) {
       Number.parseInt(byId("alertIntervalMin").value, 10) || DEFAULT_SETTINGS.alertIntervalMin,
     alertLookbackMin:
       Number.parseInt(byId("alertLookbackMin").value, 10) || DEFAULT_SETTINGS.alertLookbackMin,
+    localBridgeEnabled: byId("localBridgeEnabled").checked,
+    localBridgeUrl: byId("localBridgeUrl").value.trim() || DEFAULT_SETTINGS.localBridgeUrl,
+    localBridgeTimeoutMs:
+      Number.parseInt(byId("localBridgeTimeoutMs").value, 10) || DEFAULT_SETTINGS.localBridgeTimeoutMs,
     productLabelPrefix: byId("productLabelPrefix").value.trim() || DEFAULT_SETTINGS.productLabelPrefix,
     stepLabelPrefix: byId("stepLabelPrefix").value.trim() || DEFAULT_SETTINGS.stepLabelPrefix,
     stepRegex: byId("stepRegex").value.trim() || DEFAULT_SETTINGS.stepRegex,
@@ -98,18 +113,19 @@ async function onSave(event) {
   payload.maxRelatedIssues = Math.max(1, Math.min(500, payload.maxRelatedIssues));
   payload.alertIntervalMin = Math.max(1, Math.min(30, payload.alertIntervalMin));
   payload.alertLookbackMin = Math.max(3, Math.min(180, payload.alertLookbackMin));
+  payload.localBridgeTimeoutMs = Math.max(500, Math.min(20_000, payload.localBridgeTimeoutMs));
 
   const status = byId("status");
   status.textContent = "";
 
   try {
     await storageSet(payload);
-    status.textContent = "Saved";
+    status.textContent = "저장 완료";
     window.setTimeout(() => {
       status.textContent = "";
     }, 1400);
   } catch (error) {
-    status.textContent = error instanceof Error ? error.message : "Failed to save";
+    status.textContent = error instanceof Error ? error.message : "저장 실패";
   }
 }
 
@@ -118,6 +134,11 @@ function fillForm(settings) {
   byId("alertEnabled").checked = Boolean(settings.alertEnabled);
   byId("alertIntervalMin").value = String(settings.alertIntervalMin || DEFAULT_SETTINGS.alertIntervalMin);
   byId("alertLookbackMin").value = String(settings.alertLookbackMin || DEFAULT_SETTINGS.alertLookbackMin);
+  byId("localBridgeEnabled").checked = Boolean(settings.localBridgeEnabled);
+  byId("localBridgeUrl").value = settings.localBridgeUrl || DEFAULT_SETTINGS.localBridgeUrl;
+  byId("localBridgeTimeoutMs").value = String(
+    settings.localBridgeTimeoutMs || DEFAULT_SETTINGS.localBridgeTimeoutMs
+  );
   byId("productLabelPrefix").value = settings.productLabelPrefix;
   byId("stepLabelPrefix").value = settings.stepLabelPrefix;
   byId("stepRegex").value = settings.stepRegex;
@@ -131,7 +152,7 @@ async function applyScrumPreset() {
   fillForm(SCRUM_PRESET_SETTINGS);
   await storageSet(SCRUM_PRESET_SETTINGS);
   const status = byId("status");
-  status.textContent = "SCRUM preset applied";
+  status.textContent = "SCRUM 프리셋 적용 완료";
   window.setTimeout(() => {
     status.textContent = "";
   }, 1600);

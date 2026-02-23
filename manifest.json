@@ -11,7 +11,8 @@
   "permissions": [
     "storage",
     "alarms",
-    "notifications"
+    "notifications",
+    "tabs"
   ],
   "host_permissions": [
     "*://*.atlassian.net/*",
@@ -22,6 +23,16 @@
   "background": {
     "service_worker": "src/background/service-worker.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/jira.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
