@@ -1,0 +1,317 @@
+#jira-related-step-launcher {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 62px;
+  height: 62px;
+  border: 1px solid #b6ccf7;
+  border-radius: 999px;
+  background: radial-gradient(circle at 28% 24%, #7ec3ff, #0c66e4 60%, #0857c4 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 26px rgba(9, 30, 66, 0.36);
+  cursor: pointer;
+  z-index: 2147482999;
+  transition: transform 140ms ease, box-shadow 140ms ease, opacity 160ms ease, background 160ms ease;
+}
+
+#jira-related-step-launcher:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 30px rgba(9, 30, 66, 0.4);
+}
+
+#jira-related-step-launcher.jrsv-active {
+  border-color: #d0d4db;
+  background: #ffffff;
+  color: #253858;
+}
+
+#jira-related-step-launcher .jrsv-launcher-icon {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#jira-related-step-viewer {
+  position: fixed;
+  right: 22px;
+  bottom: 94px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(70vh, 760px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d8dee6;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(9, 30, 66, 0.28);
+  z-index: 2147483001;
+  color: #172b4d;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transform-origin: right bottom;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+#jira-related-step-viewer.jrsv-hidden {
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  pointer-events: none;
+}
+
+#jira-related-step-viewer .jrsv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid #ebecf0;
+  background: linear-gradient(180deg, #f8fbff, #f5f7fb);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+#jira-related-step-viewer .jrsv-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #091e42;
+}
+
+#jira-related-step-viewer .jrsv-subtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #5e6c84;
+}
+
+#jira-related-step-viewer .jrsv-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#jira-related-step-viewer .jrsv-btn {
+  border: 1px solid #c1c7d0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172b4d;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#jira-related-step-viewer .jrsv-btn:hover {
+  background: #f4f5f7;
+}
+
+#jira-related-step-viewer .jrsv-body {
+  display: grid;
+  grid-template-rows: minmax(140px, 1fr) auto;
+  padding: 12px;
+  gap: 10px;
+  min-height: 220px;
+}
+
+#jira-related-step-viewer .jrsv-state {
+  font-size: 13px;
+  color: #42526e;
+}
+
+#jira-related-step-viewer .jrsv-state.jrsv-error {
+  color: #bf2600;
+}
+
+#jira-related-step-viewer .jrsv-chat-log {
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 48vh;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding-right: 2px;
+}
+
+#jira-related-step-viewer .jrsv-msg {
+  display: flex;
+}
+
+#jira-related-step-viewer .jrsv-msg-bot {
+  justify-content: flex-start;
+}
+
+#jira-related-step-viewer .jrsv-msg-user {
+  justify-content: flex-end;
+}
+
+#jira-related-step-viewer .jrsv-msg-bubble {
+  max-width: 92%;
+  border-radius: 12px;
+  border: 1px solid #dfe1e6;
+  background: #f7f8fa;
+  color: #172b4d;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+#jira-related-step-viewer .jrsv-msg-user .jrsv-msg-bubble {
+  border-color: #0c66e4;
+  background: #deebff;
+}
+
+#jira-related-step-viewer .jrsv-msg-data .jrsv-msg-bubble {
+  width: 100%;
+}
+
+#jira-related-step-viewer .jrsv-msg-bubble.jrsv-error {
+  border-color: #ff8f73;
+  background: #ffebe6;
+}
+
+#jira-related-step-viewer .jrsv-composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+#jira-related-step-viewer .jrsv-input {
+  border: 1px solid #c1c7d0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172b4d;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+#jira-related-step-viewer .jrsv-input:focus {
+  outline: none;
+  border-color: #0c66e4;
+  box-shadow: 0 0 0 3px rgba(12, 102, 228, 0.15);
+}
+
+#jira-related-step-viewer .jrsv-send {
+  border: 1px solid #0c66e4;
+  border-radius: 10px;
+  background: #0c66e4;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#jira-related-step-viewer .jrsv-send:hover {
+  background: #0055cc;
+}
+
+#jira-related-step-viewer details.jrsv-product {
+  border: 1px solid #ebecf0;
+  border-radius: 12px;
+  background: #f8fafc;
+  margin-bottom: 10px;
+}
+
+#jira-related-step-viewer .jrsv-product-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #172b4d;
+}
+
+#jira-related-step-viewer .jrsv-product-summary::-webkit-details-marker {
+  display: none;
+}
+
+#jira-related-step-viewer .jrsv-product-summary::before {
+  content: "▸";
+  color: #42526e;
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+#jira-related-step-viewer details[open] > .jrsv-product-summary::before {
+  content: "▾";
+}
+
+#jira-related-step-viewer .jrsv-product-body {
+  border-top: 1px solid #ebecf0;
+  padding: 10px;
+}
+
+#jira-related-step-viewer .jrsv-step {
+  margin-bottom: 10px;
+}
+
+#jira-related-step-viewer .jrsv-step:last-child {
+  margin-bottom: 0;
+}
+
+#jira-related-step-viewer .jrsv-step-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #253858;
+  margin-bottom: 6px;
+}
+
+#jira-related-step-viewer .jrsv-issues {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+#jira-related-step-viewer .jrsv-issue {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #ebecf0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+#jira-related-step-viewer .jrsv-issue-link {
+  color: #0052cc;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+#jira-related-step-viewer .jrsv-issue-link:hover {
+  text-decoration: underline;
+}
+
+#jira-related-step-viewer .jrsv-issue-summary {
+  color: #253858;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+#jira-related-step-viewer .jrsv-issue-status {
+  color: #5e6c84;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  #jira-related-step-launcher {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  #jira-related-step-viewer {
+    right: 10px;
+    bottom: 84px;
+    width: calc(100vw - 20px);
+    max-height: 74vh;
+  }
+}

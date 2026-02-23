@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jira Related Step Viewer Options</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Jira Related Step Viewer</h1>
+      <p class="desc">
+        Labels are used to map related issues into product and step sections.
+      </p>
+
+      <form id="settings-form">
+        <section class="preset-box">
+          <h2>Preset for SCRUM</h2>
+          <p>
+            Apply preset for <code>https://dhwoo.atlassian.net</code> and project key <code>SCRUM</code>.
+          </p>
+          <button id="apply-scrum-preset-btn" type="button">Apply SCRUM Preset</button>
+        </section>
+
+        <section class="preset-box">
+          <h2>Alert Settings</h2>
+          <p>Background polling sends browser notifications for your watcher/assignee/reporter issues.</p>
+
+          <label class="field">
+            <span>Jira base URL</span>
+            <input id="jiraBaseUrl" type="text" autocomplete="off" placeholder="https://dhwoo.atlassian.net" />
+          </label>
+
+          <label class="field row-field">
+            <input id="alertEnabled" type="checkbox" />
+            <span>Enable issue update alerts</span>
+          </label>
+
+          <label class="field">
+            <span>Alert interval (minutes)</span>
+            <input id="alertIntervalMin" type="number" min="1" max="30" />
+          </label>
+
+          <label class="field">
+            <span>Lookback window (minutes)</span>
+            <input id="alertLookbackMin" type="number" min="3" max="180" />
+          </label>
+        </section>
+
+        <label class="field">
+          <span>Product label prefix</span>
+          <input id="productLabelPrefix" type="text" autocomplete="off" />
+          <small>Example: <code>product:Search</code></small>
+        </label>
+
+        <label class="field">
+          <span>Step label prefix</span>
+          <input id="stepLabelPrefix" type="text" autocomplete="off" />
+          <small>Example: <code>step:01-login</code></small>
+        </label>
+
+        <label class="field">
+          <span>Step regex fallback (summary)</span>
+          <input id="stepRegex" type="text" autocomplete="off" />
+          <small>Used when step label is missing.</small>
+        </label>
+
+        <label class="field">
+          <span>Product custom field id (optional)</span>
+          <input id="productFieldId" type="text" autocomplete="off" placeholder="customfield_12345" />
+          <small>If set, this field value is used before product label.</small>
+        </label>
+
+        <label class="field">
+          <span>Step custom field id (optional)</span>
+          <input id="stepFieldId" type="text" autocomplete="off" placeholder="customfield_12346" />
+          <small>If set, this field value is used before step label.</small>
+        </label>
+
+        <label class="field">
+          <span>Link type filter (optional)</span>
+          <input id="linkTypeFilter" type="text" autocomplete="off" placeholder="Relates, Blocks" />
+          <small>Comma-separated Jira link type names. Empty means all link types.</small>
+        </label>
+
+        <label class="field">
+          <span>Max related issues to fetch</span>
+          <input id="maxRelatedIssues" type="number" min="1" max="500" />
+          <small>Prevent too many Jira API calls on heavy tickets.</small>
+        </label>
+
+        <div class="actions">
+          <button id="save-btn" type="submit">Save</button>
+          <span id="status"></span>
+        </div>
+      </form>
+    </main>
+
+    <script src="./options.js"></script>
+  </body>
+</html>
